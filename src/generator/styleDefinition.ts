@@ -30,3 +30,20 @@ export function baseComponent(def: StyleDefinition, name: string): StyleComponen
     ? fail(`component ${name}: extends would let a reference differ from its mirror`)
     : component;
 }
+
+// unist's walkers take only mutable children lists, so the readonly tree is copied into this shape
+export interface StyleNode extends Omit<StyleElement, 'children'> {
+  readonly children: StyleNode[];
+}
+
+const toNode = (e: StyleElement): StyleNode => ({
+  ...e,
+  children: (e.children ?? []).map(toNode),
+});
+
+export const styleRoot = (
+  elements: readonly StyleElement[]
+): { type: 'root'; children: StyleNode[] } => ({
+  type: 'root',
+  children: elements.map(toNode),
+});

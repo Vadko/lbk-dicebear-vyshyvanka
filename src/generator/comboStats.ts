@@ -1,4 +1,4 @@
-import { INNER, N, region } from './grid';
+import { INNER, inDisc, N } from './grid';
 
 export interface ComboStats {
   readonly density: number;
@@ -20,7 +20,7 @@ export function comboStats(grid: string[][]): ComboStats {
   let changes = 0;
   for (const [r, c] of INNER) {
     for (const [dr, dc] of ORTHO.slice(0, 2)) {
-      if (r + dr < N && c + dc < N && region(c + dc, r + dr) !== 'o') {
+      if (r + dr < N && c + dc < N && inDisc(c + dc, r + dr)) {
         pairs += 1;
         changes += grid[r][c] === grid[r + dr][c + dc] ? 0 : 1;
       }

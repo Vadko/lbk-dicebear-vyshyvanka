@@ -1,8 +1,9 @@
+import { F } from '@mobily/ts-belt';
 import { describe, expect, it } from 'vitest';
 import { checkCombo } from './checkCombo';
 import { chiralFigures } from './chiralFigures';
 import { compose } from './compose';
-import { type Grid, MID, mirrorH, N, sameGrid, transpose } from './grid';
+import { type Grid, MID, mirrorH, N, transpose } from './grid';
 import { library } from './library';
 import { CORES } from './motifs';
 
@@ -131,10 +132,12 @@ describe('chiralFigures', () => {
   it('rejects an off-axis quarter placed by rotations', () => {
     // A core off its own diagonal keeps the quarter there too, where a quarter-turn and a mirror would draw the same picture
     const offDiagonal = Object.keys(CORES).filter(
-      (name) => !sameGrid(CORES[name].grid, transpose(CORES[name].grid))
+      (name) => !F.equals(CORES[name].grid, transpose(CORES[name].grid))
     );
     expect(offDiagonal).not.toEqual([]);
-    const pinwheel = turnedQuarter(compose(library(), offDiagonal[0], 'tbar', 'cap'));
+    const pinwheel = turnedQuarter(
+      compose(library(), 'cross', offDiagonal[0], 'tbar', 'cap')
+    );
     expect(() => checkCombo(pinwheel, 'pinwheel')).toThrow(/lost its mirror axes/);
     expect(chiralFigures(pinwheel)).not.toEqual([]);
   });

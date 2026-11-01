@@ -1,5 +1,7 @@
 import type { Grid } from './grid';
 
+export type PartKind = 'core' | 'arm' | 'corner' | 'tip' | 'diagonal';
+
 export interface Part {
   readonly grid: Grid;
   readonly weight?: number;
@@ -161,4 +163,42 @@ export const CORNERS: Record<string, Part> = {
   capB: { grid: ['.B.', 'BB.', '...'] },
   veeB: { grid: ['...', '.BB', '.B.'], weight: 0.8 },
   triB: { grid: ['...', '..B', '.BB'] },
+};
+
+// Star tips: the narrow axis wedge (dy 5, then dy 4 within one cell of the axis), mirror-symmetric, small so the diagonals lead
+export const TIPS: Record<string, Part> = {
+  none: { grid: ['.....', '.....'], weight: 2.5 },
+  dot: { grid: ['.....', '..A..'], weight: 1.5 },
+  stem: { grid: ['..A..', '..A..'], weight: 2.5 },
+  bud: { grid: ['..B..', '..A..'] },
+  budC: { grid: ['..C..', '..A..'] },
+  tee: { grid: ['.AAA.', '..A..'] },
+  berries: { grid: ['.CCC.', '..A..'], weight: 0.7 },
+  cap: { grid: ['.AAA.', '.AAA.'], weight: 0.7 },
+  flag: { grid: ['AAAAA', '..A..'], weight: 0.5 },
+};
+
+// Star branches: the wide diagonal wedge in top-left orientation (centre toward the bottom right), symmetric about the diagonal; solid, since lone diagonal stitches turn to confetti at 24 px
+export const DIAGONALS: Record<string, Part> = {
+  none: { grid: ['....', '....', '....', '....'], weight: 2 },
+  block: { grid: ['....', '.AA.', '.AA.', '....'], weight: 2 },
+  blockB: { grid: ['....', '.BB.', '.BB.', '....'] },
+  blockC: { grid: ['....', '.AA.', '.AC.', '....'] },
+  plus: { grid: ['.A..', 'AAA.', '.A..', '....'], weight: 2.5 },
+  rhomb: { grid: ['.A..', 'ACA.', '.A..', '....'], weight: 0.5 },
+  rhombB: { grid: ['.B..', 'BAB.', '.B..', '....'], weight: 0.3 },
+  bud: { grid: ['.A..', 'ACA.', '.AB.', '....'], weight: 0.4 },
+  blob: { grid: ['.A..', 'AAA.', '.AA.', '....'], weight: 2 },
+  arc: { grid: ['..A.', '.AA.', 'AA..', '....'], weight: 1.5 },
+  cup: { grid: ['..A.', '.AA.', 'AAB.', '....'] },
+  kalyna: { grid: ['.CC.', 'CCA.', 'CAA.', '....'], weight: 0.7 },
+  line: { grid: ['....', '.A..', '..A.', '....'], weight: 0.5 },
+};
+
+export const DRAWINGS: Record<PartKind, Record<string, Part>> = {
+  core: CORES,
+  arm: ARMS,
+  corner: CORNERS,
+  tip: TIPS,
+  diagonal: DIAGONALS,
 };

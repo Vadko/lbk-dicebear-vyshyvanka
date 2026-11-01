@@ -1,28 +1,40 @@
+import { A, D } from '@mobily/ts-belt';
 import { checkCombo } from './checkCombo';
 import type { ComboStats } from './comboStats';
-import { compose } from './compose';
+import { compose, LAYOUT_PARTS, LAYOUT_WEIGHT } from './compose';
+import { LAYOUTS } from './grid';
 import type { Library } from './library';
-import { ARMS, CORES, CORNERS, type Part } from './motifs';
+import { DRAWINGS, type Part } from './motifs';
 
 interface Combo {
   readonly p: number;
   readonly stats: ComboStats;
 }
 
-const total = (parts: Record<string, Part>): number =>
-  Object.values(parts).reduce((s, part) => s + (part.weight ?? 1), 0);
+const weightOf = (part: Part): number => part.weight ?? 1;
 
-// Every combination, checked, with the probability DiceBear's independent weighted picks give it
+// Each drawing with its share of its kind's weight: the chance DiceBear's weighted pick gives it
+function shares(parts: Record<string, Part>): ReadonlyArray<readonly [string, number]> {
+  const total = A.reduce(D.values(parts), 0, (s, part) => s + weightOf(part));
+  return D.toPairs(D.map(parts, (part) => weightOf(part) / total));
+}
+
+// Every combination of every layout, checked, with the probability DiceBear's independent weighted picks give it
 export function combos(lib: Library): Combo[] {
-  const [tk, ta, tx] = [total(CORES), total(ARMS), total(CORNERS)];
+  const layoutTotal = A.reduce(LAYOUTS, 0, (s, layout) => s + LAYOUT_WEIGHT[layout]);
   const out: Combo[] = [];
-  for (const [k, kp] of Object.entries(CORES)) {
-    for (const [a, ap] of Object.entries(ARMS)) {
-      for (const [x, xp] of Object.entries(CORNERS)) {
-        const stats = checkCombo(compose(lib, k, a, x), `${k}/${a}/${x}`);
-        const p =
-          ((kp.weight ?? 1) / tk) * ((ap.weight ?? 1) / ta) * ((xp.weight ?? 1) / tx);
-        out.push({ p, stats });
+  for (const layout of LAYOUTS) {
+    const lp = LAYOUT_WEIGHT[layout] / layoutTotal;
+    const slots = LAYOUT_PARTS[layout];
+    for (const [k, kp] of shares(DRAWINGS[slots.core])) {
+      for (const [a, ap] of shares(DRAWINGS[slots.arm])) {
+        for (const [x, xp] of shares(DRAWINGS[slots.corner])) {
+          const stats = checkCombo(
+            compose(lib, layout, k, a, x),
+            `${layout} ${k}/${a}/${x}`
+          );
+          out.push({ p: lp * kp * ap * xp, stats });
+        }
       }
     }
   }

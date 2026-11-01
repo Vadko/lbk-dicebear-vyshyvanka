@@ -1,12 +1,12 @@
 import type { StyleDefinition } from '@dicebear/core';
+import { A, D } from '@mobily/ts-belt';
+import { COMPONENT } from './compose';
 import { fail } from './fail';
 import { THREADS, type Thread, UNIT } from './grid';
-import type { Library, PartKind } from './library';
+import type { Library } from './library';
 import { PAINT, type Paint } from './paint';
 import { pathPolylines } from './pathPolylines';
 import { baseComponent, type StyleElement } from './styleDefinition';
-
-const DRAWN: Record<'k' | 'a' | 'x', PartKind> = { k: 'core', a: 'arm', x: 'corner' };
 
 const cell = (col: number, row: number): string => `${col},${row}`;
 
@@ -26,7 +26,7 @@ function strokeCells(d: string): string[] {
     }
     const row = stitch(y0 - UNIT / 2, d);
     const [from, to] = [stitch(x0, d), stitch(x1, d)];
-    return Array.from({ length: to - from }, (_, i) => cell(from + i, row));
+    return A.makeWithIndex(to - from, (i) => cell(from + i, row));
   });
 }
 
@@ -62,7 +62,7 @@ function areaCells(d: string): string[] {
       stitch(top, d),
       stitch(bottom, d),
     ];
-    return Array.from({ length: (c1 - c0) * (r1 - r0) }, (_, i) =>
+    return A.makeWithIndex((c1 - c0) * (r1 - r0), (i) =>
       cell(c0 + (i % (c1 - c0)), r0 + Math.floor(i / (c1 - c0)))
     );
   });
@@ -90,7 +90,8 @@ function threadOf(e: StyleElement, where: string): Thread {
 
 // Decodes the emitted path data back into cells: the SVG must draw exactly the cells the other guards checked
 export function checkPathCells(def: StyleDefinition, lib: Library): void {
-  for (const [component, kind] of Object.entries(DRAWN)) {
+  for (const kind of D.keys(COMPONENT)) {
+    const component = COMPONENT[kind];
     const variants = baseComponent(def, component).variants;
     if (Object.keys(variants).sort().join() !== Object.keys(lib[kind]).sort().join()) {
       fail(`${component}: variants differ from the ${kind} drawings`);

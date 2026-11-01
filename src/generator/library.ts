@@ -1,34 +1,44 @@
+import { D, F } from '@mobily/ts-belt';
 import { fail } from './fail';
 import {
   type Grid,
   isThread,
+  type Layout,
   MID,
   mirrorH,
   mirrorV,
   type Placed,
   type Region,
   region,
-  sameGrid,
   THREADS,
   transpose,
 } from './grid';
-import { ARMS, CORES, CORNERS, type Part } from './motifs';
+import { DRAWINGS, type PartKind } from './motifs';
 
-export type PartKind = 'core' | 'arm' | 'corner';
+export type Library = Readonly<Record<PartKind, Record<string, Placed[]>>>;
 
-export interface Library {
-  readonly core: Record<string, Placed[]>;
-  readonly arm: Record<string, Placed[]>;
-  readonly corner: Record<string, Placed[]>;
-}
-
-// Where each kind's drawing sits on the 13x13 grid (column, row), and the region its stitches must stay in
+// Where each kind's drawing sits on the 13x13 grid (column, row), its size (rows, columns), and the layout region its stitches must stay in
 export const ORIGIN: Record<PartKind, readonly [number, number]> = {
   core: [3, 3],
   arm: [3, 1],
   corner: [2, 2],
+  tip: [4, 1],
+  diagonal: [2, 2],
 };
-export const EXPECTED: Record<PartKind, Region> = { core: 'k', arm: 'v', corner: 'x' };
+const SHAPE: Record<PartKind, readonly [number, number]> = {
+  core: [7, 7],
+  arm: [3, 7],
+  corner: [3, 3],
+  tip: [2, 5],
+  diagonal: [4, 4],
+};
+export const EXPECTED: Record<PartKind, readonly [Layout, Region]> = {
+  core: ['cross', 'k'],
+  arm: ['cross', 'v'],
+  corner: ['cross', 'x'],
+  tip: ['star', 'v'],
+  diagonal: ['star', 'x'],
+};
 
 function cellAt(grid: Grid, r: number, c: number): string {
   return grid[r]?.[c] ?? fail(`out of range ${r},${c}`);
@@ -50,22 +60,28 @@ function checkShape(
 }
 
 // Every drawn grid needs a mirror axis; the composition relies on exactly these axes
+const vertical = (kind: PartKind) => (name: string, grid: Grid) => {
+  if (!F.equals(grid, mirrorH(grid))) {
+    fail(`${kind} ${name}: needs a vertical mirror axis`);
+  }
+};
+
+const diagonal = (kind: PartKind) => (name: string, grid: Grid) => {
+  if (!F.equals(grid, transpose(grid))) {
+    fail(`${kind} ${name}: needs the diagonal mirror axis`);
+  }
+};
+
 const SYMMETRY: Record<PartKind, (name: string, grid: Grid) => void> = {
   core: (name, grid) => {
-    if (!sameGrid(grid, mirrorH(grid)) || !sameGrid(grid, mirrorV(grid))) {
+    if (!F.equals(grid, mirrorH(grid)) || !F.equals(grid, mirrorV(grid))) {
       fail(`core ${name}: needs vertical and horizontal mirror axes`);
     }
   },
-  arm: (name, grid) => {
-    if (!sameGrid(grid, mirrorH(grid))) {
-      fail(`arm ${name}: needs a vertical mirror axis`);
-    }
-  },
-  corner: (name, grid) => {
-    if (!sameGrid(grid, transpose(grid))) {
-      fail(`corner ${name}: needs the diagonal mirror axis`);
-    }
-  },
+  arm: vertical('arm'),
+  corner: diagonal('corner'),
+  tip: vertical('tip'),
+  diagonal: diagonal('diagonal'),
 };
 
 const ANCHORS: Record<PartKind, (name: string, grid: Grid) => void> = {
@@ -84,11 +100,14 @@ const ANCHORS: Record<PartKind, (name: string, grid: Grid) => void> = {
     }
   },
   corner: () => undefined,
+  tip: () => undefined,
+  diagonal: () => undefined,
 };
 
 // Places a part's full drawing on the 13x13 grid and checks every stitch stays inside its own region
 function place(kind: PartKind, name: string, grid: Grid): Placed[] {
   const [c0, r0] = ORIGIN[kind];
+  const [layout, expected] = EXPECTED[kind];
   const out: Placed[] = [];
   grid.forEach((line, r) => {
     [...line].forEach((ch, c) => {
@@ -97,9 +116,9 @@ function place(kind: PartKind, name: string, grid: Grid): Placed[] {
       }
       const col = c0 + c;
       const row = r0 + r;
-      if (region(col, row) !== EXPECTED[kind]) {
+      if (region(col, row, layout) !== expected) {
         fail(
-          `${kind} ${name}: stitch at ${col},${row} lies in region ${region(col, row)}`
+          `${kind} ${name}: stitch at ${col},${row} lies in region ${region(col, row, layout)}`
         );
       }
       out.push({ col, row, t: ch });
@@ -111,22 +130,15 @@ function place(kind: PartKind, name: string, grid: Grid): Placed[] {
 const quadrant = (cells: Placed[]): Placed[] =>
   cells.filter((p) => p.col <= MID && p.row <= MID);
 
-const SETS: ReadonlyArray<readonly [PartKind, Record<string, Part>, number, number]> = [
-  ['core', CORES, 7, 7],
-  ['arm', ARMS, 3, 7],
-  ['corner', CORNERS, 3, 3],
-];
-
 // Checks every drawn part and keeps the top-left quarter of it, the slice the SVG draws
 export function library(): Library {
-  const lib: Library = { core: {}, arm: {}, corner: {} };
-  for (const [kind, parts, rows, cols] of SETS) {
-    for (const [name, part] of Object.entries(parts)) {
+  return D.mapWithKey(DRAWINGS, (kind, parts) =>
+    D.mapWithKey(parts, (name, part) => {
+      const [rows, cols] = SHAPE[kind];
       checkShape(kind, name, part.grid, rows, cols);
       SYMMETRY[kind](name, part.grid);
       ANCHORS[kind](name, part.grid);
-      lib[kind][name] = quadrant(place(kind, name, part.grid));
-    }
-  }
-  return lib;
+      return quadrant(place(kind, name, part.grid));
+    })
+  );
 }

@@ -1,3 +1,4 @@
+import { A } from '@mobily/ts-belt';
 import { type Placed, UNIT } from './grid';
 
 // Fill path: runs on a row merge into rectangles, which grow downward while the next row repeats them
@@ -8,7 +9,7 @@ export function areaPath(cells: Placed[]): string {
   }
   const runs: Array<[number, number, number, number]> = [];
   for (const [row, cols] of [...rows].sort((a, b) => a[0] - b[0])) {
-    const sorted = [...new Set(cols)].sort((a, b) => a - b);
+    const sorted = A.sort(A.uniq(cols), (a, b) => a - b);
     let start = sorted[0];
     for (let i = 1; i <= sorted.length; i++) {
       if (sorted[i] !== sorted[i - 1] + 1) {

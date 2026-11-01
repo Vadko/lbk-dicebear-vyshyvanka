@@ -106,15 +106,28 @@ const BREAKAGES: ReadonlyArray<
     /extends would let/,
   ],
   [
-    'a second quarter variant',
+    'a quarter variant that is no layout',
     (def) => {
       const q = baseComponent(def, 'q');
       return withComponent(def, 'q', {
         ...q,
-        variants: { ...q.variants, w: q.variants.v },
+        variants: { ...q.variants, w: q.variants.cross },
       });
     },
-    /needs exactly one variant/,
+    /needs one variant per layout/,
+  ],
+  [
+    'the star quarter drawing the cross arms',
+    (def) =>
+      withVariant(def, 'q', 'star', (elements) =>
+        elements.map((e) => (e.name === 't' ? { ...e, name: 'a' } : e))
+      ),
+    /component q.star: expected/,
+  ],
+  [
+    'an optional star branch',
+    (def) => withComponent(def, 'd', { ...baseComponent(def, 'd'), probability: 50 }),
+    /must always be drawn/,
   ],
   [
     'a rotated corner',
@@ -161,11 +174,11 @@ const BREAKAGES: ReadonlyArray<
   [
     'a raw path in the quarter',
     (def) =>
-      withVariant(def, 'q', 'v', (elements) => [
+      withVariant(def, 'q', 'cross', (elements) => [
         ...elements,
         el('path', { d: 'M0 1h2' }),
       ]),
-    /component q: expected/,
+    /component q.cross: expected/,
   ],
   [
     'a sawtooth border, a bent-tooth wheel',
