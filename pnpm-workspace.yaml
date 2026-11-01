@@ -1,5 +1,2 @@
 minimumReleaseAge: 4320
 dangerouslyAllowAllBuilds: false
-
-allowBuilds:
-  esbuild: true

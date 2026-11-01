@@ -6,8 +6,8 @@ The LBK player avatar as a DiceBear style, used by lbk-launcher and lbk-landing.
 |---|---|
 | `pnpm test` | Generator guards, golden hashes, mirror-symmetry checks. |
 | `pnpm build:style` | Regenerates `src/vyshyvanka.json` through every guard (`vitest --update`), then the README picture `docs/preview.svg` (`src/preview/`); never edit either by hand. `pnpm test` fails on a hand edit or a stale picture (`toMatchFileSnapshot`). |
-| `pnpm build` | tsup bundles `src/index.ts` with the JSON inlined into `dist/`. |
-| `pnpm build:site` | The demo page (`site/`) into `_site/`, with DiceBear bundled in (`site/tsup.config.ts`); `.github/workflows/pages.yml` deploys it to GitHub Pages on every push to main. Preview it with `python3 -m http.server -d _site`: a module script does not load from `file://`. |
+| `pnpm build` | tsdown (`tsdown.config.ts`) bundles `src/index.ts` with the JSON inlined into `dist/`, keeping `@dicebear/core` external. |
+| `pnpm build:site` | The demo page (`site/`) into `_site/`, with DiceBear bundled in (`site/tsdown.config.ts`, whose paths resolve from `site/`); `.github/workflows/pages.yml` deploys it to GitHub Pages on every push to main. Preview it with `python3 -m http.server -d _site`: a module script does not load from `file://`. |
 | `pnpm type-check` / `pnpm format:check` | TypeScript (the package, then `site/` with the DOM lib) and Biome. |
 
 - Reach for a maintained library before writing a helper: the generator leans on `culori` (contrast, Lab), `svgpath` (path parsing), `transformation-matrix` (SVG transforms), `graphology` (connected components), `unist-util-visit-parents` (walking the element tree) and `@mobily/ts-belt`, and the output tests read the SVG through `happy-dom`. All of them are devDependencies: the package ships only `@dicebear/core` and the generated JSON.
