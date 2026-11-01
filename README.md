@@ -1,9 +1,9 @@
-# @lbk/dicebear-vyshyvanka
+# @lbklauncher/dicebear-vyshyvanka
 
 Vyshyvanka avatars for LBK: a [DiceBear](https://www.dicebear.com) style of Ukrainian counted-thread ornaments. Every avatar is one quarter, mirrored into the other three, inside a border, in one of the palettes.
 
 ```ts
-import { vyshyvankaDataUri, vyshyvankaSvg } from '@lbk/dicebear-vyshyvanka';
+import { vyshyvankaDataUri, vyshyvankaSvg } from '@lbklauncher/dicebear-vyshyvanka';
 
 const src = vyshyvankaDataUri(seed); // for <img src>
 const svg = vyshyvankaSvg(seed); // for server rendering
