@@ -1,11 +1,10 @@
+import { describe, expect, it } from 'vitest';
 import { checkCombo } from './checkCombo';
 import { chiralFigures } from './chiralFigures';
 import { compose } from './compose';
-import { fail } from './fail';
-import { type Grid, MID, mirrorH, N } from './grid';
-import type { Library } from './library';
+import { type Grid, MID, mirrorH, N, sameGrid, transpose } from './grid';
+import { library } from './library';
 import { CORES } from './motifs';
-import { rejectsWith } from './rejectsWith';
 
 const HOOKED = ['A.AAA', 'A.A..', 'AAAAA', '..A.A', 'AAA.A'];
 const BLADES = ['.AA...', '.....A', '.....A', 'A.....', 'A.....', '...AA.'];
@@ -118,33 +117,25 @@ function turnedQuarter(grid: string[][]): string[][] {
   return out;
 }
 
-// The chirality scan must name every rotation-only figure and still accept mirror-symmetric controls
-export function chiralitySelfTest(lib: Library): void {
-  for (const [label, lines, at, finder] of CHIRAL) {
-    const found = chiralFigures(planted(lines, at));
-    if (!found.some((f) => finder.test(f))) {
-      fail(
-        `self-test: ${label} was not rejected by ${finder} (found: ${found.join('; ') || 'nothing'})`
-      );
-    }
-  }
-  for (const [label, lines] of CONTROLS) {
-    const found = chiralFigures(planted(lines, [4, 4]));
-    if (found.length > 0) {
-      fail(`self-test: mirror-symmetric ${label} was rejected (${found[0]})`);
-    }
-  }
-  // A D2 core keeps the quarter off its diagonal, where a quarter-turn and a mirror would draw the same picture
-  const d2 =
-    Object.keys(CORES).find((name) => lib.symmetry[`core.${name}`] === 'D2') ??
-    fail('self-test needs a D2 core');
-  const pinwheel = turnedQuarter(compose(lib, d2, 'tbar', 'cap'));
-  rejectsWith(
-    'an off-axis quarter placed by rotations',
-    () => checkCombo(pinwheel, 'self-test'),
-    /lost its mirror axes/
-  );
-  if (chiralFigures(pinwheel).length === 0) {
-    fail('self-test: the chirality scan missed an off-axis quarter placed by rotations');
-  }
-}
+describe('chiralFigures', () => {
+  it.each(CHIRAL)('finds the %s', (_, lines, at, finder) => {
+    expect(chiralFigures(planted(lines, at))).toContainEqual(
+      expect.stringMatching(finder)
+    );
+  });
+
+  it.each(CONTROLS)('accepts the mirror-symmetric %s', (_, lines) => {
+    expect(chiralFigures(planted(lines, [4, 4]))).toEqual([]);
+  });
+
+  it('rejects an off-axis quarter placed by rotations', () => {
+    // A core off its own diagonal keeps the quarter there too, where a quarter-turn and a mirror would draw the same picture
+    const offDiagonal = Object.keys(CORES).filter(
+      (name) => !sameGrid(CORES[name].grid, transpose(CORES[name].grid))
+    );
+    expect(offDiagonal).not.toEqual([]);
+    const pinwheel = turnedQuarter(compose(library(), offDiagonal[0], 'tbar', 'cap'));
+    expect(() => checkCombo(pinwheel, 'pinwheel')).toThrow(/lost its mirror axes/);
+    expect(chiralFigures(pinwheel)).not.toEqual([]);
+  });
+});

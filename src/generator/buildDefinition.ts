@@ -65,7 +65,7 @@ function paletteVariant(p: Palette): StyleVariant {
     ])
   );
   return {
-    weight: p.weight ?? 1,
+    weight: 1,
     tags: [`region:${p.region}`, `canvas:${p.rim ? 'dark' : 'linen'}`],
     elements,
   };
@@ -78,7 +78,7 @@ function variants(
   return Object.fromEntries(
     Object.entries(parts).map(([name, part]) => [
       name,
-      { weight: part.weight ?? 1, elements: body(cells[name] ?? []) },
+      { weight: part.weight ?? 1, elements: body(cells[name]) },
     ])
   );
 }

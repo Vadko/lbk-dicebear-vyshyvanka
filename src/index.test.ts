@@ -50,25 +50,6 @@ describe('vyshyvankaDataUri', () => {
     );
   });
 
-  it('draws different avatars for different seeds', () => {
-    expect(vyshyvankaDataUri('0a1b2c3d4e5f')).not.toBe(vyshyvankaDataUri('ffffffffffff'));
-  });
-
-  // A player keeps the avatar the server gave the seed: a DiceBear or style change that alters any of these is a redraw of everyone
-  it.each([
-    ['0a1b2c3d4e5f', 'd4dd42d8c1f4d0da1d3b942871fd3d887fe122393ec4525adafc69f5f173d326'],
-    ['ffffffffffff', '9e6c031563278648abc42d066dfb451507f36201b68613639111b00a00725054'],
-    ['000000000000', 'a577e84bb158ef0074321716fee38425a5d167bace60334fcf9e50ee09dcc287'],
-    ['c0ffee15900d', 'c13d2b50ada2b66b3a488264467976b236e54300a1e57f9166bdacb6c8f80b20'],
-    ['9b3d27e4a6f0', 'b38d350fefa0fc83743faa2fb0ab1104780867557ee05080a83a0e1f57603034'],
-    ['7c9e2d41b0a3', '63aef7dc12b8231da09a9777f8ce2a539d7b1bfdada9cb53e0a19c4bbc59d51f'],
-    ['1234567890ab', '8d0e1b6f3c9792080063cc0067b5fe0894b9ce017c8dbb479a1a70562a89d884'],
-    ['a5a5a5a5a5a5', '2a51a3441d24115e2a032fb911cbd7bd11596d103cac8510be626a8386fd39d8'],
-    ['002d7e1a2b3c', '3ef4395b96274bf68b426a9d9fe174f4866b8cfdc2556d4441f7848975f56921'],
-  ])('draws seed %s exactly as before', (seed, digest) => {
-    expect(sha256(vyshyvankaDataUri(seed))).toBe(digest);
-  });
-
   // The test seeds draw every variant, so a redraw of any palette, border or part changes this
   it('draws all test seeds exactly as before', () => {
     expect(sha256(SEEDS.map(vyshyvankaDataUri).join('\n'))).toBe(

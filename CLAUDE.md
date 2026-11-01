@@ -9,7 +9,7 @@ The LBK player avatar as a DiceBear style, used by lbk-launcher and lbk-landing.
 | `pnpm build` | tsup bundles `src/index.ts` with the JSON inlined into `dist/`. |
 | `pnpm type-check` / `pnpm format:check` | TypeScript and Biome. |
 
-- `src/generator/` builds the style behind its mirror and §86a guards: no rotation-only figure may reach an avatar, only mirror symmetry (the hosting is in Germany). The `check*` and `*SelfTest` modules run at build time, not in consumers.
+- `src/generator/` builds the style behind its mirror and §86a guards: no rotation-only figure may reach an avatar, only mirror symmetry (the hosting is in Germany). The `check*` guards run at build time, not in consumers; the tests beside them prove each guard rejects what it should.
 - `@dicebear/core` is a pinned dependency, not a peer, and the API fixes the avatar options (`borderRadius: 50`), so every consumer draws a seed identically. `src/index.test.ts` holds golden hashes of the output: a change that alters them redraws every player, so a DiceBear bump or a style edit that changes them needs an explicit decision.
 - Seeds come from the server (`review_authors.avatar_seed`, 12 hex characters).
 - Comments are one line and in English; brace every control-flow body (Biome `useBlockStatements`).
