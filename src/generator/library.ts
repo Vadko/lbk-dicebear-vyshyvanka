@@ -20,7 +20,6 @@ export interface Library {
   readonly core: Record<string, Placed[]>;
   readonly arm: Record<string, Placed[]>;
   readonly corner: Record<string, Placed[]>;
-  readonly symmetry: Record<string, string>;
 }
 
 // Where each kind's drawing sits on the 13x13 grid (column, row), and the region its stitches must stay in
@@ -51,24 +50,21 @@ function checkShape(
 }
 
 // Every drawn grid needs a mirror axis; the composition relies on exactly these axes
-const SYMMETRY: Record<PartKind, (name: string, grid: Grid) => string> = {
+const SYMMETRY: Record<PartKind, (name: string, grid: Grid) => void> = {
   core: (name, grid) => {
     if (!sameGrid(grid, mirrorH(grid)) || !sameGrid(grid, mirrorV(grid))) {
       fail(`core ${name}: needs vertical and horizontal mirror axes`);
     }
-    return sameGrid(grid, transpose(grid)) ? 'D4' : 'D2';
   },
   arm: (name, grid) => {
     if (!sameGrid(grid, mirrorH(grid))) {
       fail(`arm ${name}: needs a vertical mirror axis`);
     }
-    return 'D1';
   },
   corner: (name, grid) => {
     if (!sameGrid(grid, transpose(grid))) {
       fail(`corner ${name}: needs the diagonal mirror axis`);
     }
-    return 'D1 diagonal';
   },
 };
 
@@ -123,11 +119,11 @@ const SETS: ReadonlyArray<readonly [PartKind, Record<string, Part>, number, numb
 
 // Checks every drawn part and keeps the top-left quarter of it, the slice the SVG draws
 export function library(): Library {
-  const lib: Library = { core: {}, arm: {}, corner: {}, symmetry: {} };
+  const lib: Library = { core: {}, arm: {}, corner: {} };
   for (const [kind, parts, rows, cols] of SETS) {
     for (const [name, part] of Object.entries(parts)) {
       checkShape(kind, name, part.grid, rows, cols);
-      lib.symmetry[`${kind}.${name}`] = SYMMETRY[kind](name, part.grid);
+      SYMMETRY[kind](name, part.grid);
       ANCHORS[kind](name, part.grid);
       lib[kind][name] = quadrant(place(kind, name, part.grid));
     }

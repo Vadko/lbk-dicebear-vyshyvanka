@@ -1,9 +1,9 @@
 import type { StyleDefinition } from '@dicebear/core';
+import { describe, expect, it } from 'vitest';
 import { buildDefinition } from './buildDefinition';
 import { checkDefinition } from './checkDefinition';
 import { MIRRORS, TRANSPOSE } from './compose';
-import type { Library } from './library';
-import { rejectsWith } from './rejectsWith';
+import { library } from './library';
 import {
   baseComponent,
   el,
@@ -285,13 +285,33 @@ const BREAKAGES: ReadonlyArray<
       ),
     /dot: thread A draws/,
   ],
+  [
+    'a core path turned by a transform',
+    (def) =>
+      withVariant(def, 'k', 'dot', (elements) =>
+        elements.map((e) => withAttributes(e, { transform: 'rotate(90 13 13)' }))
+      ),
+    /painted like no thread/,
+  ],
+  [
+    'a core wrapped in a rotated group',
+    (def) =>
+      withVariant(def, 'k', 'dot', (elements) => [
+        el('g', { transform: 'rotate(90 13 13)' }, [...elements]),
+      ]),
+    /one path per thread/,
+  ],
 ];
 
-// The definition guards must accept the real definition and reject every breakage with their own message
-export function definitionSelfTest(lib: Library): void {
+describe('checkDefinition', () => {
+  const lib = library();
   const good = buildDefinition(lib);
-  checkDefinition(good, lib);
-  for (const [label, breakage, expected] of BREAKAGES) {
-    rejectsWith(label, () => checkDefinition(breakage(good), lib), expected);
-  }
-}
+
+  it('accepts the real definition', () => {
+    expect(() => checkDefinition(good, lib)).not.toThrow();
+  });
+
+  it.each(BREAKAGES)('rejects %s', (_, breakage, expected) => {
+    expect(() => checkDefinition(breakage(good), lib)).toThrow(expected);
+  });
+});

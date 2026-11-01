@@ -1,6 +1,6 @@
 {
   "name": "@lbklauncher/dicebear-vyshyvanka",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Vyshyvanka avatars: a DiceBear style of Ukrainian counted-thread ornaments built from one mirrored quarter",
   "author": {
     "name": "LBK Team",
@@ -30,7 +30,7 @@
   ],
   "packageManager": "pnpm@11.4.0",
   "engines": {
-    "node": ">=24.22.1"
+    "node": ">=22.0.0"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",

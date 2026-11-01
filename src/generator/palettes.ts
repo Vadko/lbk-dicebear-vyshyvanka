@@ -6,7 +6,6 @@ export interface Palette {
   readonly b: string;
   readonly c: string;
   readonly rim?: string;
-  readonly weight?: number;
 }
 
 const LINEN = '#f3eee2';

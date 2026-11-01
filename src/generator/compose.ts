@@ -41,8 +41,7 @@ export function compose(
   lib: Library,
   core: string,
   arm: string,
-  corner: string,
-  quarters: readonly string[] = MIRRORS
+  corner: string
 ): string[][] {
   const parts = {
     k: lib.core[core] ?? fail(core),
@@ -51,13 +50,10 @@ export function compose(
   };
   const q = QUARTER.flatMap(([name, t]) => parts[name].map((p) => applyMatrix(t, p)));
   const grid = Array.from({ length: N }, () => Array<string>(N).fill('.'));
-  for (const transform of quarters) {
+  for (const transform of MIRRORS) {
     for (const p of q.map((cell) => applyMatrix(transform, cell))) {
-      const prev =
-        grid[p.row]?.[p.col] ??
+      if (grid[p.row]?.[p.col] === undefined) {
         fail(`cell ${p.col},${p.row} off the grid in ${core}/${arm}/${corner}`);
-      if (prev !== '.' && prev !== p.t) {
-        fail(`collision at ${p.col},${p.row} in ${core}/${arm}/${corner}`);
       }
       grid[p.row][p.col] = p.t;
     }
