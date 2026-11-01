@@ -2,7 +2,7 @@
 
 Vyshyvanka avatars for LBK: a [DiceBear](https://www.dicebear.com) style of Ukrainian counted-thread ornaments. Every avatar is one quarter, laid out as a cross or a star and mirrored into the other three, inside a border, in one of the regional palettes.
 
-Try any seed at **[vadko.github.io/lbk-dicebear-vyshyvanka](https://vadko.github.io/lbk-dicebear-vyshyvanka/)**.
+Try any seed at **[vyshyvanka.lbklauncher.com](https://vyshyvanka.lbklauncher.com/)**.
 
 ![Twenty-four vyshyvanka avatars drawn from server-shaped seeds](https://raw.githubusercontent.com/Vadko/lbk-dicebear-vyshyvanka/main/docs/preview.svg)
 
