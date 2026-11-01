@@ -45,7 +45,7 @@ function avatarButton(seed: string): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
   const avatar = drawAvatar(seed);
-  const label = avatar.region ? `${seed} · ${avatar.region}` : seed;
+  const label = avatar.region ? `${seed} · ${avatar.region} colours` : seed;
   button.title = label;
   button.setAttribute('aria-label', `Show seed ${label}`);
   const img = document.createElement('img');
