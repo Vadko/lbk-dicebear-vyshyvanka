@@ -172,6 +172,17 @@ button.primary:hover {
   outline-offset: 2px;
 }
 
+.region {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 0;
+}
+
+#region {
+  font-weight: 600;
+}
+
 .sizes {
   display: flex;
   flex-wrap: wrap;
