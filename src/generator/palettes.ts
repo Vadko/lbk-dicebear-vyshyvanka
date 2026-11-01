@@ -1,6 +1,26 @@
+export const REGIONS = [
+  'poltava',
+  'chernihiv',
+  'kyiv',
+  'volyn',
+  'podillia',
+  'hutsul',
+  'bukovyna',
+  'pokuttia',
+  'boiko',
+  'lemko',
+  'polissia',
+  'sloboda',
+  'zakarpattia',
+  'kherson',
+  'brand',
+] as const;
+
+export type Region = (typeof REGIONS)[number];
+
 export interface Palette {
   readonly name: string;
-  readonly region: string;
+  readonly region: Region;
   readonly canvas: string;
   readonly a: string;
   readonly b: string;

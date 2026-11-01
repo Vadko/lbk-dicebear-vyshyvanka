@@ -1,5 +1,5 @@
 import { version } from '../package.json';
-import { vyshyvankaDataUri } from '../src/index';
+import { drawAvatar } from './drawAvatar';
 
 const GALLERY_SIZE = 48;
 
@@ -14,6 +14,7 @@ function byId<T extends HTMLElement>(id: string, type: new () => T): T {
 const input = byId('seed', HTMLInputElement);
 const snippet = byId('snippet', HTMLElement);
 const gallery = byId('gallery', HTMLDivElement);
+const region = byId('region', HTMLElement);
 const previews = document.querySelectorAll<HTMLImageElement>('img.preview');
 
 // The server hands out 12 hex characters, so the gallery draws seeds of the same shape
@@ -23,11 +24,12 @@ const randomSeed = (): string =>
   ).join('');
 
 function show(seed: string): void {
-  const src = vyshyvankaDataUri(seed);
+  const avatar = drawAvatar(seed);
+  region.textContent = avatar.region;
   for (const img of previews) {
-    img.src = src;
+    img.src = avatar.src;
   }
-  byId('icon', HTMLLinkElement).href = src;
+  byId('icon', HTMLLinkElement).href = avatar.src;
   snippet.textContent = `vyshyvankaDataUri(${JSON.stringify(seed)})`;
   history.replaceState(null, '', `#${new URLSearchParams({ seed })}`);
 }
@@ -40,10 +42,11 @@ function pick(seed: string): void {
 function avatarButton(seed: string): HTMLButtonElement {
   const button = document.createElement('button');
   button.type = 'button';
-  button.title = seed;
-  button.setAttribute('aria-label', `Show seed ${seed}`);
+  const avatar = drawAvatar(seed);
+  button.title = `${seed} · ${avatar.region}`;
+  button.setAttribute('aria-label', `Show seed ${seed}, ${avatar.region}`);
   const img = document.createElement('img');
-  img.src = vyshyvankaDataUri(seed);
+  img.src = avatar.src;
   img.alt = '';
   img.width = 72;
   img.height = 72;
