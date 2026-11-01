@@ -34,8 +34,8 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
-    "build:site": "tsup --config site/tsup.config.ts",
+    "build": "tsdown",
+    "build:site": "tsdown --config site/tsdown.config.ts",
     "build:style": "vitest run src/generator/buildVyshyvanka.test.ts --update && vitest run src/preview --update",
     "type-check": "tsc --noEmit && tsc --noEmit -p site",
     "format:check": "biome check .",
@@ -58,7 +58,7 @@
     "happy-dom": "21.0.4",
     "svgpath": "2.6.0",
     "transformation-matrix": "3.1.0",
-    "tsup": "9.0.0",
+    "tsdown": "0.23.4",
     "typescript": "6.0.3",
     "unist-util-visit-parents": "6.1.0",
     "vitest": "5.0.3"
