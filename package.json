@@ -1,12 +1,13 @@
 {
   "name": "@lbklauncher/dicebear-vyshyvanka",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Vyshyvanka avatars: a DiceBear style of Ukrainian counted-thread ornaments built from one mirrored quarter",
   "author": {
     "name": "LBK Team",
     "email": "info@lbklauncher.com"
   },
   "license": "MIT",
+  "homepage": "https://vadko.github.io/lbk-dicebear-vyshyvanka/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Vadko/lbk-dicebear-vyshyvanka.git"
@@ -34,8 +35,9 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
-    "build:style": "vitest run src/generator/buildVyshyvanka.test.ts --update",
-    "type-check": "tsc --noEmit",
+    "build:site": "tsup --config site/tsup.config.ts",
+    "build:style": "vitest run src/generator/buildVyshyvanka.test.ts --update && vitest run src/preview --update",
+    "type-check": "tsc --noEmit && tsc --noEmit -p site",
     "format:check": "biome check .",
     "format": "biome check --write .",
     "test": "vitest run",
@@ -46,9 +48,19 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
+    "@mobily/ts-belt": "3.13.1",
+    "@types/culori": "4.0.1",
     "@types/node": "24.19.0",
+    "culori": "4.0.2",
+    "graphology": "0.26.0",
+    "graphology-components": "1.5.4",
+    "graphology-types": "0.24.8",
+    "happy-dom": "21.0.4",
+    "svgpath": "2.6.0",
+    "transformation-matrix": "3.1.0",
     "tsup": "9.0.0",
     "typescript": "6.0.3",
+    "unist-util-visit-parents": "6.1.0",
     "vitest": "5.0.3"
   }
 }

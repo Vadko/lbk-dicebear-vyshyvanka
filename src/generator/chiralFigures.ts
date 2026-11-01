@@ -1,5 +1,7 @@
-import { fail } from './fail';
-import { region, THREADS, type Thread } from './grid';
+import { A } from '@mobily/ts-belt';
+import { UndirectedGraph } from 'graphology';
+import { connectedComponents } from 'graphology-components';
+import { inDisc, THREADS, type Thread } from './grid';
 
 type Mask = boolean[][];
 type Cells = Array<[number, number]>;
@@ -17,35 +19,27 @@ const KING_STEPS = [
 const ROOK_STEPS = KING_STEPS.slice(0, 4);
 
 function components(mask: Mask, diagonal: boolean): Cells[] {
-  const h = mask.length;
-  const w = mask[0]?.length ?? 0;
-  const seen = mask.map((row) => row.map(() => false));
+  const graph = new UndirectedGraph<{ cell: [number, number] }>();
+  const key = (r: number, c: number): string => `${r},${c}`;
+  mask.forEach((row, r) => {
+    row.forEach((set, c) => {
+      if (set) {
+        graph.addNode(key(r, c), { cell: [r, c] });
+      }
+    });
+  });
   const steps = diagonal ? KING_STEPS : ROOK_STEPS;
-  const out: Cells[] = [];
-  for (let r = 0; r < h; r++) {
-    for (let c = 0; c < w; c++) {
-      if (!mask[r][c] || seen[r][c]) {
-        continue;
+  graph.forEachNode((node, { cell: [r, c] }) => {
+    for (const [dr, dc] of steps) {
+      const next = key(r + dr, c + dc);
+      if (graph.hasNode(next)) {
+        graph.mergeEdge(node, next);
       }
-      const comp: Cells = [];
-      const stack: Cells = [[r, c]];
-      seen[r][c] = true;
-      while (stack.length > 0) {
-        const [y, x] = stack.pop() ?? fail('empty');
-        comp.push([y, x]);
-        for (const [dy, dx] of steps) {
-          const ny = y + dy;
-          const nx = x + dx;
-          if (ny >= 0 && ny < h && nx >= 0 && nx < w && mask[ny][nx] && !seen[ny][nx]) {
-            seen[ny][nx] = true;
-            stack.push([ny, nx]);
-          }
-        }
-      }
-      out.push(comp);
     }
-  }
-  return out;
+  });
+  return connectedComponents(graph).map((nodes) =>
+    nodes.map((node) => graph.getNodeAttributes(node).cell)
+  );
 }
 
 // The eight symmetries of a square, as maps on coordinates centred at 0 (doubled so half-cells stay integral)
@@ -140,15 +134,17 @@ function chiralWindow(mask: Mask): string | undefined {
 }
 
 // Every non-empty set of threads: a figure split between threads still reads as one, and some palettes paint two threads alike
-const THREAD_SETS: ReadonlyArray<readonly Thread[]> = Array.from(
-  { length: 2 ** THREADS.length - 1 },
-  (_, i) => THREADS.filter((_, bit) => ((i + 1) >> bit) & 1)
-).sort((a, b) => a.length - b.length);
+const THREAD_SETS: ReadonlyArray<readonly Thread[]> = A.sortBy(
+  A.makeWithIndex(2 ** THREADS.length - 1, (i) =>
+    THREADS.filter((_, bit) => ((i + 1) >> bit) & 1)
+  ),
+  (set) => set.length
+);
 
 // Lists every rotation-only figure in any set of threads or in the linen gaps, tagged with the mask that shows it
 export function chiralFigures(grid: string[][]): string[] {
   const inner = (r: number, c: number) =>
-    r >= 0 && c >= 0 && r < grid.length && c < grid.length && region(c, r) !== 'o';
+    r >= 0 && c >= 0 && r < grid.length && c < grid.length && inDisc(c, r);
   const stitched = (set: readonly Thread[]): Mask =>
     grid.map((row) => row.map((ch) => set.some((t) => t === ch)));
   const masks: ReadonlyArray<readonly [string, Mask]> = [

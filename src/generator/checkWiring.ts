@@ -1,52 +1,53 @@
 import type { StyleDefinition } from '@dicebear/core';
-import { MIRRORS, QUARTER } from './compose';
+import { D } from '@mobily/ts-belt';
+import { visitParents } from 'unist-util-visit-parents';
+import { COMPONENT, LAYOUT_PARTS, MIRRORS, QUARTER } from './compose';
 import { fail } from './fail';
-import { SIZE } from './grid';
-import { baseComponent, type StyleElement } from './styleDefinition';
+import { LAYOUTS, SIZE } from './grid';
+import {
+  baseComponent,
+  type StyleElement,
+  type StyleNode,
+  styleRoot,
+} from './styleDefinition';
 
 // The only attributes a wrapper of a reference may set: inherited paint, never geometry
 const INHERITED_PAINT = ['stroke', 'color', 'fill', 'stroke-width'];
 
-function componentRefs(
-  elements: readonly StyleElement[],
-  out: StyleElement[] = []
-): StyleElement[] {
-  for (const e of elements) {
+function componentRefs(elements: readonly StyleElement[]): StyleElement[] {
+  const out: StyleElement[] = [];
+  visitParents(styleRoot(elements), (e) => {
     if (e.type === 'component') {
       out.push(e);
     }
-    componentRefs(e.children ?? [], out);
-  }
+  });
   return out;
 }
 
 // A reference may carry only its transform, and sit only in plain groups that set inherited paint
-function checkPlacements(
-  elements: readonly StyleElement[],
-  where: string,
-  ancestors: readonly StyleElement[] = []
-): void {
-  for (const e of elements) {
-    if (e.type === 'component') {
-      const extra = Object.keys(e.attributes ?? {}).filter((key) => key !== 'transform');
-      if (extra.length > 0) {
-        fail(
-          `${where}: a reference to ${e.name} may carry only a transform, got ${extra.join(', ')}`
-        );
-      }
-      const wrapper = ancestors.find(
-        (a) =>
-          a.name !== 'g' ||
-          Object.keys(a.attributes ?? {}).some((key) => !INHERITED_PAINT.includes(key))
-      );
-      if (wrapper) {
-        fail(
-          `${where}: ${e.name} sits in <${wrapper.name}> ${JSON.stringify(wrapper.attributes ?? {})}; only a plain <g> setting ${INHERITED_PAINT.join(', ')} may wrap a reference`
-        );
-      }
+function checkPlacements(elements: readonly StyleElement[], where: string): void {
+  visitParents(styleRoot(elements), (e, ancestors) => {
+    if (e.type !== 'component') {
+      return;
     }
-    checkPlacements(e.children ?? [], where, [...ancestors, e]);
-  }
+    const extra = Object.keys(e.attributes ?? {}).filter((key) => key !== 'transform');
+    if (extra.length > 0) {
+      fail(
+        `${where}: a reference to ${e.name} may carry only a transform, got ${extra.join(', ')}`
+      );
+    }
+    const wrapper = ancestors.find(
+      (a): a is StyleNode =>
+        a.type !== 'root' &&
+        (a.name !== 'g' ||
+          Object.keys(a.attributes ?? {}).some((key) => !INHERITED_PAINT.includes(key)))
+    );
+    if (wrapper) {
+      fail(
+        `${where}: ${e.name} sits in <${wrapper.name}> ${JSON.stringify(wrapper.attributes ?? {})}; only a plain <g> setting ${INHERITED_PAINT.join(', ')} may wrap a reference`
+      );
+    }
+  });
 }
 
 function transformOf(e: StyleElement): string {
@@ -83,23 +84,27 @@ export function checkWiring(def: StyleDefinition): void {
       checkPlacements(v.elements, `${name}.${vName}`);
     }
   }
-  for (const name of ['q', 'k', 'a', 'x']) {
+  const parts = D.values(COMPONENT);
+  for (const name of ['q', ...parts]) {
     if ('probability' in baseComponent(def, name)) {
       fail(`component ${name}: must always be drawn`);
     }
   }
-  const quarter = Object.values(baseComponent(def, 'q').variants);
-  if (quarter.length !== 1) {
-    fail(
-      'component q: needs exactly one variant, so all four references draw the same quarter'
-    );
+  // DiceBear picks one quarter variant per avatar, as for every part, so all four references draw the same layout
+  const quarters = baseComponent(def, 'q').variants;
+  if (Object.keys(quarters).sort().join() !== [...LAYOUTS].sort().join()) {
+    fail(`component q: needs one variant per layout (${LAYOUTS.join(', ')})`);
   }
-  const inQuarter = topLevel(quarter[0].elements);
-  const expected = QUARTER.map(([n, t]) => `${n}:${t}`).join('|');
-  if (inQuarter !== expected) {
-    fail(`component q: expected ${expected}, got ${inQuarter}`);
+  for (const layout of LAYOUTS) {
+    const inQuarter = topLevel(quarters[layout].elements);
+    const expected = QUARTER.map(
+      ([slot, t]) => `${COMPONENT[LAYOUT_PARTS[layout][slot]]}:${t}`
+    ).join('|');
+    if (inQuarter !== expected) {
+      fail(`component q.${layout}: expected ${expected}, got ${inQuarter}`);
+    }
   }
-  for (const name of ['k', 'a', 'x', 'b']) {
+  for (const name of [...parts, 'b']) {
     for (const [vName, v] of Object.entries(baseComponent(def, name).variants)) {
       if (componentRefs(v.elements).length > 0) {
         fail(`${name}.${vName}: parts may not reference components`);

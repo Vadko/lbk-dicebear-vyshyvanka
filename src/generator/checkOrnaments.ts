@@ -1,8 +1,9 @@
 import type { StyleDefinition } from '@dicebear/core';
+import { CONTINUE, SKIP, visitParents } from 'unist-util-visit-parents';
 import { fail } from './fail';
 import { SIZE } from './grid';
 import { type Point, pathPolylines } from './pathPolylines';
-import { baseComponent, type StyleElement } from './styleDefinition';
+import { baseComponent, type StyleElement, styleRoot } from './styleDefinition';
 
 interface Frame {
   readonly w: number;
@@ -17,6 +18,8 @@ interface Ornament {
   readonly children: 'elements' | 'text' | 'none';
   readonly check: (e: StyleElement, frame: Frame, where: string) => Frame;
 }
+
+const CANVAS: Frame = { w: SIZE, h: SIZE };
 
 // Coordinates are written with two decimals, so a mirrored point may land 0.01 off
 const TOLERANCE = 0.011;
@@ -177,29 +180,38 @@ const ORNAMENTS: Record<OrnamentName, Ornament> = {
 const isOrnament = (name: string | undefined): name is OrnamentName =>
   name !== undefined && Object.hasOwn(ORNAMENTS, name);
 
-function walk(elements: readonly StyleElement[], frame: Frame, where: string): void {
-  for (const e of elements) {
-    if (e.type === 'component') {
-      continue;
+// Each ornament's frame is the one its parent hands down: the canvas, or a pattern's tile
+function walk(elements: readonly StyleElement[], where: string): void {
+  const frames = new Map<object, Frame>();
+  visitParents(styleRoot(elements), (e, ancestors) => {
+    if (e.type === 'root') {
+      return CONTINUE;
     }
+    if (e.type === 'component') {
+      return SKIP;
+    }
+    const path = [
+      where,
+      ...ancestors.flatMap((a) => (a.type === 'root' ? [] : [a.name])),
+    ];
     if (e.type !== 'element' || !isOrnament(e.name)) {
-      fail(`${where}: ${e.type} ${e.name ?? ''} is not an allowed ornament`);
+      fail(`${path.join(' ')}: ${e.type} ${e.name ?? ''} is not an allowed ornament`);
     }
     const ornament = ORNAMENTS[e.name];
+    const at = [...path, e.name].join(' ');
     const stray = Object.keys(e.attributes ?? {}).filter(
       (key) => !ornament.attributes.includes(key)
     );
     if (stray.length > 0) {
-      fail(`${where}: ${e.name} may not carry ${stray.join(', ')}`);
+      fail(`${path.join(' ')}: ${e.name} may not carry ${stray.join(', ')}`);
     }
     if (ornament.children === 'none' && (e.children?.length ?? 0) > 0) {
-      fail(`${where}: ${e.name} may not have children`);
+      fail(`${path.join(' ')}: ${e.name} may not have children`);
     }
-    const inner = ornament.check(e, frame, `${where} ${e.name}`);
-    if (ornament.children === 'elements') {
-      walk(e.children ?? [], inner, `${where} ${e.name}`);
-    }
-  }
+    const parent = ancestors.at(-1);
+    frames.set(e, ornament.check(e, (parent && frames.get(parent)) ?? CANVAS, at));
+    return ornament.children === 'elements' ? CONTINUE : SKIP;
+  });
 }
 
 // Borders and the palette's own elements sit outside the mirrored quarter, so their geometry must carry both mirror axes itself
@@ -209,7 +221,7 @@ export function checkOrnaments(def: StyleDefinition): void {
   }
   for (const name of ['b', 'p']) {
     for (const [vName, v] of Object.entries(baseComponent(def, name).variants)) {
-      walk(v.elements, { w: SIZE, h: SIZE }, `${name}.${vName}`);
+      walk(v.elements, `${name}.${vName}`);
     }
   }
 }

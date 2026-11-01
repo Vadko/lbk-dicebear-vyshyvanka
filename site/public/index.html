@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="color-scheme" content="dark" />
+    <title>Vyshyvanka avatars</title>
+    <meta
+      name="description"
+      content="A DiceBear avatar style of Ukrainian counted-thread embroidery. Type a seed or browse random ones."
+    />
+    <link id="icon" rel="icon" href="data:," />
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Vyshyvanka</h1>
+        <p class="lede">
+          A <a href="https://www.dicebear.com">DiceBear</a> avatar style of Ukrainian
+          counted-thread embroidery: one quarter mirrored into four, in a border, stitched
+          in a regional palette. A seed draws the same avatar everywhere.
+        </p>
+        <nav>
+          <a href="https://github.com/Vadko/lbk-dicebear-vyshyvanka">GitHub</a>
+          <a href="https://www.npmjs.com/package/@lbklauncher/dicebear-vyshyvanka">npm</a>
+          <span id="version" class="muted"></span>
+        </nav>
+      </header>
+
+      <section class="try" aria-label="Try a seed">
+        <img class="preview large" width="192" height="192" alt="Avatar for the seed" />
+        <div class="controls">
+          <label for="seed">Seed</label>
+          <div class="row">
+            <input id="seed" type="text" spellcheck="false" autocomplete="off" maxlength="64" />
+            <button id="random" class="primary" type="button">Random</button>
+          </div>
+          <div class="sizes">
+            <img class="preview" width="64" height="64" alt="" />
+            <img class="preview" width="40" height="40" alt="" />
+            <img class="preview" width="28" height="28" alt="" />
+            <span class="muted">Below 36 px the texture drops out.</span>
+          </div>
+          <pre><code id="snippet"></code></pre>
+        </div>
+      </section>
+
+      <section aria-labelledby="random-heading">
+        <div class="section-head">
+          <h2 id="random-heading">Random seeds</h2>
+          <button id="shuffle" type="button">Shuffle</button>
+        </div>
+        <div id="gallery" class="gallery"></div>
+      </section>
+
+      <section aria-labelledby="use-heading">
+        <h2 id="use-heading">Use</h2>
+        <pre><code>pnpm add @lbklauncher/dicebear-vyshyvanka</code></pre>
+        <pre><code>import { vyshyvankaDataUri, vyshyvankaSvg } from '@lbklauncher/dicebear-vyshyvanka';
+
+img.src = vyshyvankaDataUri(seed); // in the browser
+const svg = vyshyvankaSvg(seed); // on the server</code></pre>
+      </section>
+    </main>
+  </body>
+</html>

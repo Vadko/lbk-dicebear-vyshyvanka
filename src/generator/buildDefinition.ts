@@ -1,9 +1,10 @@
 import type { StyleDefinition } from '@dicebear/core';
+import { D } from '@mobily/ts-belt';
 import { BORDERS } from './borders';
-import { MIRRORS, QUARTER } from './compose';
-import { type Placed, SIZE, THREADS } from './grid';
+import { COMPONENT, LAYOUT_PARTS, LAYOUT_WEIGHT, MIRRORS, QUARTER } from './compose';
+import { LAYOUTS, type Placed, SIZE, THREADS } from './grid';
 import type { Library } from './library';
-import { ARMS, CORES, CORNERS, type Part } from './motifs';
+import { DRAWINGS, type Part } from './motifs';
 import { PAINT, type Paint } from './paint';
 import { PALETTES, type Palette } from './palettes';
 import { el, ref, type StyleElement, type StyleVariant } from './styleDefinition';
@@ -75,12 +76,10 @@ function variants(
   parts: Record<string, Part>,
   cells: Record<string, Placed[]>
 ): Record<string, StyleVariant> {
-  return Object.fromEntries(
-    Object.entries(parts).map(([name, part]) => [
-      name,
-      { weight: part.weight ?? 1, elements: body(cells[name]) },
-    ])
-  );
+  return D.mapWithKey(parts, (name, part) => ({
+    weight: part.weight ?? 1,
+    elements: body(cells[name]),
+  }));
 }
 
 // The palette places the quarter four times; the quarter places its core, both arms and its corner
@@ -97,12 +96,25 @@ export function buildDefinition(lib: Library): StyleDefinition {
       },
       q: {
         ...square,
-        variants: { v: { elements: QUARTER.map(([name, t]) => ref(name, t)) } },
+        variants: Object.fromEntries(
+          LAYOUTS.map((layout) => [
+            layout,
+            {
+              weight: LAYOUT_WEIGHT[layout],
+              elements: QUARTER.map(([slot, t]) =>
+                ref(COMPONENT[LAYOUT_PARTS[layout][slot]], t)
+              ),
+            },
+          ])
+        ),
       },
-      k: { ...square, variants: variants(CORES, lib.core) },
-      a: { ...square, variants: variants(ARMS, lib.arm) },
-      x: { ...square, variants: variants(CORNERS, lib.corner) },
-      b: { ...square, probability: 45, variants: BORDERS },
+      ...Object.fromEntries(
+        D.keys(COMPONENT).map((kind) => [
+          COMPONENT[kind],
+          { ...square, variants: variants(DRAWINGS[kind], lib[kind]) },
+        ])
+      ),
+      b: { ...square, probability: 55, variants: BORDERS },
     },
   };
 }

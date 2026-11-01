@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["src/**", "!src/vyshyvanka.json", "*.json", "*.ts"]
+    "includes": ["src/**", "!src/vyshyvanka.json", "site/**", "*.json", "*.ts"]
   },
   "formatter": {
     "enabled": true,

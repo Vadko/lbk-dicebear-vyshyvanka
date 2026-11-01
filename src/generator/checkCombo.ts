@@ -1,12 +1,13 @@
+import { F } from '@mobily/ts-belt';
 import { chiralFigures } from './chiralFigures';
 import { type ComboStats, comboStats } from './comboStats';
 import { fail } from './fail';
-import { mirrorH, mirrorV, sameGrid } from './grid';
+import { mirrorH, mirrorV } from './grid';
 
 // Rejects any composition that lost its mirror axes or holds a rotation-only figure
 export function checkCombo(grid: string[][], label: string): ComboStats {
   const rows = grid.map((row) => row.join(''));
-  if (!sameGrid(rows, mirrorH(rows)) || !sameGrid(rows, mirrorV(rows))) {
+  if (!F.equals(rows, mirrorH(rows)) || !F.equals(rows, mirrorV(rows))) {
     fail(`${label}: composition lost its mirror axes`);
   }
   const chiral = chiralFigures(grid);
