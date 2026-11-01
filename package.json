@@ -1,0 +1,54 @@
+{
+  "name": "@lbk/dicebear-vyshyvanka",
+  "version": "1.0.0",
+  "description": "Vyshyvanka avatars: a DiceBear style of Ukrainian counted-thread ornaments built from one mirrored quarter",
+  "author": {
+    "name": "LBK Team",
+    "email": "info@lbklauncher.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vadko/lbk-dicebear-vyshyvanka.git"
+  },
+  "keywords": [
+    "dicebear",
+    "avatar",
+    "vyshyvanka",
+    "ukrainian"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "packageManager": "pnpm@11.4.0",
+  "engines": {
+    "node": ">=24.22.1"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "build:style": "vitest run src/generator/buildVyshyvanka.test.ts --update",
+    "type-check": "tsc --noEmit",
+    "format:check": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm type-check && pnpm format:check && pnpm test && pnpm build"
+  },
+  "dependencies": {
+    "@dicebear/core": "10.7.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@types/node": "24.19.0",
+    "tsup": "9.0.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.3"
+  }
+}
