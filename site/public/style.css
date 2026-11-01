@@ -183,6 +183,10 @@ button.primary:hover {
   font-weight: 600;
 }
 
+.region[hidden] {
+  display: none;
+}
+
 .sizes {
   display: flex;
   flex-wrap: wrap;

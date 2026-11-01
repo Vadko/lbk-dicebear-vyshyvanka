@@ -1,7 +1,8 @@
 import { avatarOf } from '../src/avatarOf';
 import { PALETTES, type Region } from '../src/generator/palettes';
 
-const REGION_NAMES: Record<Region, string> = {
+// The brand palettes are LBK's own colours, not a region, so they name none
+const REGION_NAMES: Record<Exclude<Region, 'brand'>, string> = {
   poltava: 'Poltavshchyna',
   chernihiv: 'Chernihivshchyna',
   kyiv: 'Kyivshchyna',
@@ -16,12 +17,11 @@ const REGION_NAMES: Record<Region, string> = {
   sloboda: 'Slobozhanshchyna',
   zakarpattia: 'Zakarpattia',
   kherson: 'Khersonshchyna',
-  brand: 'LBK colours',
 };
 
 export interface DrawnAvatar {
   readonly src: string;
-  readonly region: string;
+  readonly region: string | null;
 }
 
 // DiceBear reports the palette it picked, and the palette names its region
@@ -32,5 +32,8 @@ export function drawAvatar(seed: string): DrawnAvatar {
   if (!palette) {
     throw new Error(`palette ${String(pVariant)} is not in PALETTES`);
   }
-  return { src: avatar.toDataUri(), region: REGION_NAMES[palette.region] };
+  return {
+    src: avatar.toDataUri(),
+    region: palette.region === 'brand' ? null : REGION_NAMES[palette.region],
+  };
 }
